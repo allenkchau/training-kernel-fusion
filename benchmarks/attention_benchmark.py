@@ -6,7 +6,7 @@ Three modes:
   benchmark — measure latency (p50, p99) via nki.benchmark
   profile   — generate neuron-profile traces for HBM traffic analysis
 
-Usage (on a trn1 instance):
+Usage (on a Trainium instance, trn1 or trn2):
   python attention_benchmark.py --mode accuracy
   python attention_benchmark.py --mode benchmark
   python attention_benchmark.py --mode profile
@@ -30,6 +30,25 @@ from kernels.baseline.attention import baseline_attention, numpy_attention
 from kernels.fused.attention import fused_attention
 
 PROFILE_DIR = os.path.join(PROJECT_ROOT, "profiling")
+
+
+def configure_neuron_target(target):
+    """
+    Optionally pin Neuron compiler target via NEURON_CC_FLAGS.
+
+    NKI JIT compilation will respect this environment variable.
+    """
+    if target == "auto":
+        return
+
+    target_flag = f"--target={target}"
+    existing = os.environ.get("NEURON_CC_FLAGS", "").strip()
+    tokens = existing.split()
+    if target_flag not in tokens:
+        os.environ["NEURON_CC_FLAGS"] = (
+            f"{existing} {target_flag}".strip() if existing else target_flag
+        )
+    print(f"[config] NEURON_CC_FLAGS={os.environ['NEURON_CC_FLAGS']}")
 
 
 def make_inputs(d_head, seqlen, dtype=np.float32):
@@ -154,7 +173,14 @@ if __name__ == "__main__":
     parser.add_argument("--seqlen", type=int, default=4096)
     parser.add_argument("--warmup", type=int, default=5)
     parser.add_argument("--iters", type=int, default=20)
+    parser.add_argument(
+        "--target",
+        default="auto",
+        choices=["auto", "trn1", "trn2"],
+        help="Optional Neuron compiler target override.",
+    )
     args = parser.parse_args()
+    configure_neuron_target(args.target)
 
     if args.mode in ("accuracy", "all"):
         run_accuracy(args.d_head, args.seqlen)

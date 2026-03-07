@@ -1,5 +1,5 @@
 """
-Baseline (non-fused) NKI attention kernel for AWS Trainium (NeuronCore-v2).
+Baseline (non-fused) NKI attention kernel for AWS Trainium/Trainium2.
 
 Computes self-attention: Output = softmax(Q^T K) @ V^T
 

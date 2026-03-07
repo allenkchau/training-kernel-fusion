@@ -1,5 +1,5 @@
 """
-Baseline NKI softmax kernel for AWS Trainium (NeuronCore-v2).
+Baseline NKI softmax kernel for AWS Trainium/Trainium2.
 
 Computes numerically-stable softmax along the free dimension (axis=1)
 using NKI ISA-level APIs with partition-dimension tiling.

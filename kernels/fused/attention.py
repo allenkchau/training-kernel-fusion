@@ -1,5 +1,5 @@
 """
-Fused GEMM + Softmax + GEMM attention kernel for AWS Trainium (NeuronCore-v2).
+Fused GEMM + Softmax + GEMM attention kernel for AWS Trainium/Trainium2.
 
 Computes self-attention: Output = softmax(Q^T K) @ V^T
 
