@@ -9,8 +9,8 @@ The intermediate tensor Y takes a full HBM round-trip between the two
 kernels. This is the memory-wall bottleneck that kernel fusion eliminates.
 """
 
-import nki
-import nki.language as nl
+from neuronxcc import nki
+import neuronxcc.nki.language as nl
 import numpy as np
 
 # Tile sizes for Neuron Core v2
@@ -60,9 +60,9 @@ def gemm_kernel(lhsT, rhs, bias):
             # PSUM → SBUF with dtype cast
             acc_sb = nl.copy(acc, dtype=result.dtype)
 
-            # Broadcast-add bias: [1, TILE_N] → [TILE_M, TILE_N]
+            # Broadcast-add bias along partition dim using nl.arange mask
             bias_tile = nl.load(bias[0:1, n * TILE_N:(n + 1) * TILE_N])
-            acc_sb = acc_sb + bias_tile
+            acc_sb = acc_sb + bias_tile.broadcast_to((TILE_M, TILE_N))
 
             # Write intermediate result to HBM
             nl.store(
