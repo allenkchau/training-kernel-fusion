@@ -107,6 +107,29 @@ def plot_precision(precision_rows, out_dir: Path):
     plt.close(fig)
 
 
+def plot_tflops(latency_rows, out_dir: Path):
+    import matplotlib.pyplot as plt
+
+    groups = {}
+    for r in latency_rows:
+        groups.setdefault((r["dtype"], r["kernel"]), []).append(r)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for (dtype, kernel), rows in sorted(groups.items()):
+        rows = sorted(rows, key=lambda r: r["seqlen"])
+        x = [r["seqlen"] for r in rows]
+        y = [r["est_tflops_p50"] for r in rows]
+        ax.plot(x, y, marker="o", label=f"{dtype}-{kernel}")
+    ax.set_title("Effective TFLOPS vs Sequence Length (Attention)")
+    ax.set_xlabel("Sequence Length")
+    ax.set_ylabel("TFLOPS")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_dir / "tflops_vs_seqlen.png", dpi=160)
+    plt.close(fig)
+
+
 def plot_dma_proxy(profile_rows, out_dir: Path):
     import matplotlib.pyplot as plt
 
@@ -161,6 +184,7 @@ def main():
 
     plot_speedup(data["speedups"], out_dir)
     plot_throughput(data["latency_throughput"], out_dir)
+    plot_tflops(data["latency_throughput"], out_dir)
     plot_precision(data["precision_tradeoffs"], out_dir)
     plot_dma_proxy(data["profile_summaries"], out_dir)
 
